@@ -143,4 +143,4 @@ if uploaded_file:
                 memo = row[col_memo]
                 kakao_summary += f"{idx+1}. 주문자: {name} / 연락처: {phone}\n   ➤ 요청: {memo}\n\n"
             st.text_area("문의사항 요약", value=kakao_summary.strip(), height=200)
-            st.download_button("📋 텍스트 파일로 저장", kakao_summary.strip(), file_name="문의사항요약.txt")
+            st.download_button("📋 텍스트 파일로 저장", data=kakao_summary.strip(), file_name="문의사항요약.txt")
