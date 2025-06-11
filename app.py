@@ -16,111 +16,94 @@ if uploaded_file:
     df = pd.read_excel(uploaded_file)
 
     try:
-        # 컬럼 이름 자동 검색 함수
-        def find_column(keyword, columns):
-            matches = [col for col in columns if keyword.lower() in col.lower()]
-            if not matches:
-                raise ValueError(f"'{keyword}'를 포함하는 컬럼을 찾을 수 없습니다.")
-            return matches[0]
-
-        # 컬럼 자동 설정
-        col_date = "응답일시"
-        col_2kg = find_column("2kg", df.columns)
-        col_4kg = find_column("4kg", df.columns)
-        col_name = "주문자명 (입금자명)(*)"
-        col_phone = "주문자 연락처(*)"
-        col_receiver = "배송지 성명(주문자와 동일 할 경우 미입력)"
-        col_address = "주소(*)"
+        # 컬럼 이름 추출
+        col_name = [c for c in df.columns if "주문자명" in c][0]
+        col_phone = [c for c in df.columns if "연락처" in c][0]
+        col_receiver = [c for c in df.columns if "배송지 성명" in c][0]
+        col_address = [c for c in df.columns if "주소" in c][0]
+        col_date = [c for c in df.columns if "응답일시" in c][0]
+        col_2kg = [c for c in df.columns if "2kg" in c][0]
+        col_4kg = [c for c in df.columns if "4kg" in c][0]
+        col_inquiry = [c for c in df.columns if "문의" in c or "의견" in c]
+        col_inquiry = col_inquiry[0] if col_inquiry else None
 
         # 날짜 필터 설정
         df[col_date] = pd.to_datetime(df[col_date], errors='coerce')
-        min_date = df[col_date].min()
-        max_date = df[col_date].max()
-
-        start_date = st.date_input("시작 날짜", value=min_date.date())
-        start_time = st.time_input("시작 시간", value=min_date.time())
-        end_date = st.date_input("종료 날짜", value=max_date.date())
-        end_time = st.time_input("종료 시간", value=max_date.time())
+        start_date = st.date_input("시작 날짜", value=df[col_date].min().date())
+        start_time = st.time_input("시작 시간", value=df[col_date].min().time())
+        end_date = st.date_input("종료 날짜", value=df[col_date].max().date())
+        end_time = st.time_input("종료 시간", value=df[col_date].max().time())
 
         start_dt = pd.to_datetime(f"{start_date} {start_time}")
         end_dt = pd.to_datetime(f"{end_date} {end_time}")
 
-        # 필터 선택
+        # 수량 필터 UI
         filter_2kg = st.checkbox("✅ 2kg 수량 1개 이상", value=False)
         filter_4kg = st.checkbox("✅ 4kg 수량 1개 이상", value=False)
 
-        if not filter_2kg and not filter_4kg:
-            st.warning("✅ 필터를 하나 이상 선택해주세요.")
-            st.stop()
+        df[col_2kg] = pd.to_numeric(df[col_2kg], errors="coerce").fillna(0).astype(int)
+        df[col_4kg] = pd.to_numeric(df[col_4kg], errors="coerce").fillna(0).astype(int)
 
-        # 수량 숫자형 변환
-        df[col_2kg] = pd.to_numeric(df[col_2kg].astype(str).str.strip(), errors="coerce").fillna(0)
-        df[col_4kg] = pd.to_numeric(df[col_4kg].astype(str).str.strip(), errors="coerce").fillna(0)
-
-        # 날짜 필터 적용
+        # 필터링
         filtered_df = df[
             (df[col_date] >= start_dt) &
             (df[col_date] <= end_dt)
         ].copy()
 
-        # 수취인명 처리
-        filtered_df["수취인명"] = filtered_df[col_receiver].fillna("").astype(str)
-        filtered_df["수취인명"] = filtered_df["수취인명"].replace("", np.nan)
-        filtered_df["수취인명"] = filtered_df["수취인명"].fillna(filtered_df[col_name])
+        exploded_rows = []
 
-        # 전화번호 정리 함수
-        def normalize_phone(phone):
-            phone_str = str(phone).strip().replace(".0", "")
-            if phone_str.startswith("1") and not phone_str.startswith("01"):
-                return "0" + phone_str
-            return phone_str
-
-        filtered_df["수취인 전화번호"] = filtered_df[col_phone].apply(normalize_phone)
-
-        # 필터된 주문 수량만큼 복제
-        expanded_rows = []
         for _, row in filtered_df.iterrows():
-            name = row["수취인명"]
-            address = row[col_address]
-            phone = row["수취인 전화번호"]
-
-            if filter_2kg:
+            if filter_2kg and row[col_2kg] > 0:
                 for _ in range(int(row[col_2kg])):
-                    expanded_rows.append({
+                    exploded_rows.append({
                         "상품명": "복숭아 2kg",
-                        "수취인명": name,
+                        "수취인명": row[col_receiver] if pd.notna(row[col_receiver]) and str(row[col_receiver]).strip() else row[col_name],
                         "수취인 우편번호": "",
-                        "수취인 주소": address,
-                        "수취인 전화번호": phone,
+                        "수취인 주소": row[col_address],
+                        "수취인 전화번호": str(row[col_phone]).replace(".0", "") if ".0" in str(row[col_phone]) else str(row[col_phone])
                     })
-
-            if filter_4kg:
+            if filter_4kg and row[col_4kg] > 0:
                 for _ in range(int(row[col_4kg])):
-                    expanded_rows.append({
+                    exploded_rows.append({
                         "상품명": "복숭아 4kg",
-                        "수취인명": name,
+                        "수취인명": row[col_receiver] if pd.notna(row[col_receiver]) and str(row[col_receiver]).strip() else row[col_name],
                         "수취인 우편번호": "",
-                        "수취인 주소": address,
-                        "수취인 전화번호": phone,
+                        "수취인 주소": row[col_address],
+                        "수취인 전화번호": str(row[col_phone]).replace(".0", "") if ".0" in str(row[col_phone]) else str(row[col_phone])
                     })
 
-        # 결과 DataFrame
-        output = pd.DataFrame(expanded_rows)
+        result_df = pd.DataFrame(exploded_rows)
 
-        # 엑셀 다운로드 함수
+        # 문의사항 데이터 추출
+        if col_inquiry:
+            inquiry_df = df[df[col_inquiry].notna() & (df[col_inquiry].astype(str).str.strip() != "")]
+            inquiry_export = inquiry_df[[col_name, col_phone, col_inquiry]].copy()
+        else:
+            inquiry_export = pd.DataFrame(columns=[col_name, col_phone, "문의사항"])
+
         def to_excel_bytes(df):
-            output_stream = BytesIO()
-            with pd.ExcelWriter(output_stream, engine="xlsxwriter") as writer:
+            output = BytesIO()
+            with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
                 df.to_excel(writer, index=False)
-            return output_stream.getvalue()
+            return output.getvalue()
 
-        st.success(f"📦 총 {len(output)}건 추출됨")
+        # 주문 데이터 다운로드
+        st.success(f"📦 총 {len(result_df)}건 추출됨")
         st.download_button(
-            label="📥 엑셀 다운로드",
-            data=to_excel_bytes(output),
-            file_name="SSONG-Peach-Filtered.xlsx",
+            label="📥 주문 엑셀 다운로드",
+            data=to_excel_bytes(result_df),
+            file_name="SSONG-Peach-Orders.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
+
+        # 문의사항 다운로드
+        if not inquiry_export.empty:
+            st.download_button(
+                label="📝 문의사항만 다운로드",
+                data=to_excel_bytes(inquiry_export),
+                file_name="SSONG-Peach-Inquiries.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
 
     except Exception as e:
         st.error(f"처리 중 오류 발생: {e}")
