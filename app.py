@@ -78,11 +78,17 @@ if uploaded_file:
         output_df["수취인명"] = output_df["수취인명"].fillna(output_df[col_name])
 
         def normalize_phone(phone):
-            phone_str = str(phone).strip()
-            phone_str = re.sub(r"[^\d]", "", phone_str)
-            if phone_str.startswith("1") and len(phone_str) == 10:
-                phone_str = "0" + phone_str
-            return phone_str
+    phone_str = str(phone).strip()
+    
+    # 소수점 제거 (예: 1012345678.0 → 1012345678)
+    if phone_str.endswith(".0"):
+        phone_str = phone_str[:-2]
+        
+    # 앞에 0 붙이기 (예: 1012345678 → 01012345678)
+    if phone_str.startswith("1") and not phone_str.startswith("01"):
+        phone_str = "0" + phone_str
+        
+    return phone_str
 
         output_df["수취인 전화번호"] = output_df[col_phone].apply(normalize_phone)
 
