@@ -57,15 +57,27 @@ if uploaded_file:
             (df[col_date] >= start_dt) & (df[col_date] <= end_dt)
         ]
 
-        # 필터 조건 충족한 주문만 추출
-        output_rows = []
-        for _, row in filtered_df.iterrows():
-            if filter_2kg and row[col_2kg] >= 1:
-                for _ in range(int(row[col_2kg])):
-                    output_rows.append(row)
-            if filter_4kg and row[col_4kg] >= 1:
-                for _ in range(int(row[col_4kg])):
-                    output_rows.append(row)
+        # 주문 수량에 따라 행 반복 생성
+output_rows = []
+for _, row in filtered_df.iterrows():
+    for _ in range(int(row["2kg"])):
+        output_rows.append({
+            "상품명": "복숭아 2kg",
+            "수취인명": row["수취인명"],
+            "수취인 우편번호": "",
+            "수취인 주소": row[col_address],
+            "수취인 전화번호": row["수취인 전화번호"],
+        })
+    for _ in range(int(row["4kg"])):
+        output_rows.append({
+            "상품명": "복숭아 4kg",
+            "수취인명": row["수취인명"],
+            "수취인 우편번호": "",
+            "수취인 주소": row[col_address],
+            "수취인 전화번호": row["수취인 전화번호"],
+        })
+
+      output = pd.DataFrame(output_rows)
 
         # 아무 필터도 안했으면 비움
         if not filter_2kg and not filter_4kg:
