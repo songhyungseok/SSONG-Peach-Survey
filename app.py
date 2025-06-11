@@ -18,16 +18,23 @@ if uploaded_file:
     df = pd.read_excel(uploaded_file)
 
     try:
-        # 컬럼 지정
+        # ✅ 2kg / 4kg 컬럼 자동 탐색
+        def find_column(keyword, columns):
+            matches = [col for col in columns if keyword.lower() in col.lower()]
+            if not matches:
+                raise ValueError(f"'{keyword}'를 포함하는 컬럼을 찾을 수 없습니다.")
+            return matches[0]
+
+        # 컬럼 자동 매핑
         col_date = "응답일시"
-        col_2kg = "신선 2kg (24,000원) (box단위)(*)"
-        col_4kg = "신선 4kg (43,000원) (box단위)(*)"
+        col_2kg = find_column("2kg", df.columns)
+        col_4kg = find_column("4kg", df.columns)
         col_name = "주문자명 (입금자명)(*)"
         col_phone = "주문자 연락처(*)"
         col_receiver = "배송지 성명(주문자와 동일 할 경우 미입력)"
         col_address = "주소(*)"
 
-        # 날짜 필터 UI
+        # 날짜 필터
         df[col_date] = pd.to_datetime(df[col_date], errors='coerce')
         min_date = df[col_date].min()
         max_date = df[col_date].max()
@@ -72,14 +79,13 @@ if uploaded_file:
 
         filtered_df["수취인 전화번호"] = filtered_df[col_phone].apply(normalize_phone)
 
-        # 수량에 맞춰 행 복제
+        # 수량만큼 행 복제
         expanded_rows = []
         for _, row in filtered_df.iterrows():
             name = row["수취인명"]
             address = row[col_address]
             phone = row["수취인 전화번호"]
 
-            # 2kg 필터가 활성화된 경우
             if filter_2kg:
                 for _ in range(int(row[col_2kg])):
                     expanded_rows.append({
@@ -90,7 +96,6 @@ if uploaded_file:
                         "수취인 전화번호": phone,
                     })
 
-            # 4kg 필터가 활성화된 경우
             if filter_4kg:
                 for _ in range(int(row[col_4kg])):
                     expanded_rows.append({
