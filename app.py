@@ -90,25 +90,25 @@ if uploaded_file:
             filtered_df["수취인 전화번호"] = filtered_df[col_phone].apply(normalize_phone)
 
             rows = []
-            for _, row in filtered_df.iterrows():
-                 if filter_2kg:
-                for _ in range(row[col_2kg]):
-                    rows.append({
-                        "상품명": "복숭아 2kg",
-                        "수취인명": row["수취인명"],
-                        "수취인 우편번호": "",
-                        "수취인 주소": row[col_address],
-                        "수취인 전화번호": row["수취인 전화번호"]
-                    })
-                 if filter_4kg:
-                for _ in range(row[col_4kg]):
-                    rows.append({
-                        "상품명": "복숭아 4kg",
-                        "수취인명": row["수취인명"],
-                        "수취인 우편번호": "",
-                        "수취인 주소": row[col_address],
-                        "수취인 전화번호": row["수취인 전화번호"]
-                    })
+for _, row in filtered_df.iterrows():
+    if filter_2kg:
+        for _ in range(row[col_2kg]):
+            rows.append({
+                "상품명": "복숭아 2kg",
+                "수취인명": row["수취인명"],
+                "수취인 우편번호": "",
+                "수취인 주소": row[col_address],
+                "수취인 전화번호": row["수취인 전화번호"]
+            })
+    if filter_4kg:
+        for _ in range(row[col_4kg]):
+            rows.append({
+                "상품명": "복숭아 4kg",
+                "수취인명": row["수취인명"],
+                "수취인 우편번호": "",
+                "수취인 주소": row[col_address],
+                "수취인 전화번호": row["수취인 전화번호"]
+            })
 
             final_df = pd.DataFrame(rows)
             st.success(f"✅ 총 {len(final_df)}건 추출 완료")
