@@ -25,8 +25,9 @@ if uploaded_file:
             return None
 
         col_date = find_column(df, "응답일시")
-        col_2kg = find_column(df, "2kg")
-        col_4kg = find_column(df, "4kg")
+        # "2kg"와 "4kg" 문자열이 포함된 컬럼명을 자동 탐색
+        col_2kg = [col for col in df.columns if "2kg" in col][0]
+        col_4kg = [col for col in df.columns if "4kg" in col][0]
         col_name = find_column(df, "입금자명")
         col_phone = find_column(df, "연락처")
         col_receiver = find_column(df, "배송지 성명")
