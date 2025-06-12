@@ -25,14 +25,15 @@ if uploaded_file:
             return None
 
         col_date = find_column(df, "응답일시")
-        # "2kg"와 "4kg" 문자열이 포함된 컬럼명을 자동 탐색
-        col_2kg = [col for col in df.columns if "2kg" in col][0]
-        col_4kg = [col for col in df.columns if "4kg" in col][0]
         col_name = find_column(df, "입금자명")
         col_phone = find_column(df, "연락처")
         col_receiver = find_column(df, "배송지 성명")
         col_address = find_column(df, "주소")
         col_note = find_column(df, "의견")
+
+        # "2kg", "4kg" 항목 찾기
+        col_2kg = [col for col in df.columns if "2kg" in col][0]
+        col_4kg = [col for col in df.columns if "4kg" in col][0]
 
         df[col_date] = pd.to_datetime(df[col_date], errors='coerce')
 
@@ -47,21 +48,37 @@ if uploaded_file:
         start_dt = pd.to_datetime(f"{start_date} {start_time}")
         end_dt = pd.to_datetime(f"{end_date} {end_time}")
 
-        # 수량 필터
         filter_2kg = st.checkbox("✅ 2kg 수량 1개 이상", value=True)
         filter_4kg = st.checkbox("✅ 4kg 수량 1개 이상", value=True)
 
         df[col_2kg] = pd.to_numeric(df[col_2kg], errors='coerce').fillna(0)
         df[col_4kg] = pd.to_numeric(df[col_4kg], errors='coerce').fillna(0)
 
-        filtered_df = df[
-            (df[col_date] >= start_dt) & (df[col_date] <= end_dt)
-        ]
+        filtered_df = df[(df[col_date] >= start_dt) & (df[col_date] <= end_dt)]
 
-        # 주문 수량에 따라 행 반복 생성
+        if not filter_2kg:
+            filtered_df = filtered_df[filtered_df[col_2kg] == 0]
+        if not filter_4kg:
+            filtered_df = filtered_df[filtered_df[col_4kg] == 0]
+
+        def normalize_phone(phone):
+            phone_str = str(phone).strip()
+            if phone_str.endswith(".0"):
+                phone_str = phone_str[:-2]
+            phone_str = re.sub(r"[^0-9]", "", phone_str)
+            if phone_str.startswith("1") and not phone_str.startswith("01"):
+                phone_str = "0" + phone_str
+            return phone_str
+
+        # 수취인 정보 정리
+        filtered_df["수취인명"] = filtered_df[col_receiver].fillna("").replace("", np.nan)
+        filtered_df["수취인명"] = filtered_df["수취인명"].fillna(filtered_df[col_name])
+        filtered_df["수취인 전화번호"] = filtered_df[col_phone].apply(normalize_phone)
+
+        # 행 반복
         output_rows = []
         for _, row in filtered_df.iterrows():
-            for _ in range(int(row["2kg"])):
+            for _ in range(int(row[col_2kg])):
                 output_rows.append({
                     "상품명": "복숭아 2kg",
                     "수취인명": row["수취인명"],
@@ -69,7 +86,7 @@ if uploaded_file:
                     "수취인 주소": row[col_address],
                     "수취인 전화번호": row["수취인 전화번호"],
                 })
-            for _ in range(int(row["4kg"])):
+            for _ in range(int(row[col_4kg])):
                 output_rows.append({
                     "상품명": "복숭아 4kg",
                     "수취인명": row["수취인명"],
@@ -78,37 +95,8 @@ if uploaded_file:
                     "수취인 전화번호": row["수취인 전화번호"],
                 })
 
-        output = pd.DataFrame(output_rows)
-       
-        # 아무 필터도 안했으면 비움
-        if not filter_2kg and not filter_4kg:
-            output_rows = []
+        order_df = pd.DataFrame(output_rows)
 
-        output_df = pd.DataFrame(output_rows)
-
-        # 수취인 정보 정리
-        output_df["수취인명"] = output_df[col_receiver].fillna("").replace("", np.nan)
-        output_df["수취인명"] = output_df["수취인명"].fillna(output_df[col_name])
-
-        def normalize_phone(phone):
-          phone_str = str(phone).strip()
-          if phone_str.endswith(".0"):
-            phone_str = phone_str[:-2]
-          if phone_str.startswith("1") and not phone_str.startswith("01"):
-            phone_str = "0" + phone_str
-          return phone_str
-
-        output_df["수취인 전화번호"] = output_df[col_phone].apply(normalize_phone)
-
-        order_excel = pd.DataFrame({
-            "상품명": "복숭아",
-            "수취인명": output_df["수취인명"],
-            "수취인 우편번호": "",
-            "수취인 주소": output_df[col_address],
-            "수취인 전화번호": output_df["수취인 전화번호"],
-        })
-
-        # 엑셀 변환
         def to_excel_bytes(df_dict):
             output = BytesIO()
             with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
@@ -116,10 +104,10 @@ if uploaded_file:
                     df.to_excel(writer, index=False, sheet_name=sheet)
             return output.getvalue()
 
-        st.success(f"📦 총 {len(order_excel)}건 추출됨")
+        st.success(f"📦 총 {len(order_df)}건 추출됨")
         st.download_button(
             label="📥 복숭아 주문 엑셀 다운로드",
-            data=to_excel_bytes({"주문서": order_excel}),
+            data=to_excel_bytes({"주문서": order_df}),
             file_name="SSONG-Peach-Filtered.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
@@ -134,10 +122,7 @@ if uploaded_file:
             notes_df["연락처"] = notes_df[col_phone].apply(normalize_phone)
             notes_df["문의내용"] = notes_df[col_note]
 
-            # 시트1: 전체 문의사항
             sheet1 = notes_df[["주문자명", "연락처", "문의내용"]]
-
-            # 시트2: '흠과'가 포함된 문의사항
             sheet2 = sheet1[sheet1["문의내용"].str.contains("흠과", case=False, na=False)]
 
             inquiry_excel = to_excel_bytes({"전체문의": sheet1, "흠과문의": sheet2})
@@ -163,7 +148,6 @@ if uploaded_file:
         kakao_summary = "\n\n".join(summary_lines)
 
         st.text_area("📋 카카오톡용 요약", kakao_summary, height=300)
-
         st.download_button("📄 텍스트 파일로 저장", kakao_summary.strip(), file_name="문의사항요약.txt")
         st.code(kakao_summary, language="text")
 
