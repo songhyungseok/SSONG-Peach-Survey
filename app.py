@@ -56,11 +56,6 @@ if uploaded_file:
 
         filtered_df = df[(df[col_date] >= start_dt) & (df[col_date] <= end_dt)]
 
-        if not filter_2kg:
-            filtered_df = filtered_df[filtered_df[col_2kg] == 0]
-        if not filter_4kg:
-            filtered_df = filtered_df[filtered_df[col_4kg] == 0]
-
         def normalize_phone(phone):
             phone_str = str(phone).strip()
             if phone_str.endswith(".0"):
