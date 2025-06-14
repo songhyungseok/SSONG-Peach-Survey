@@ -78,6 +78,7 @@ if uploaded_file:
         # 행 반복
         output_rows = []
         for _, row in filtered_df.iterrows():
+          if filter_2kg and row[col_2kg] > 0:
             for _ in range(int(row[col_2kg])):
                 output_rows.append({
                     "상품명": "복숭아 2kg",
@@ -86,6 +87,7 @@ if uploaded_file:
                     "수취인 주소": row[col_address],
                     "수취인 전화번호": row["수취인 전화번호"],
                 })
+          if filter_4kg and row[col_4kg] > 0:
             for _ in range(int(row[col_4kg])):
                 output_rows.append({
                     "상품명": "복숭아 4kg",
