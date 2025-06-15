@@ -28,6 +28,7 @@ if uploaded_file:
         col_name = find_column(df, "입금자명")
         col_phone = find_column(df, "연락처")
         col_receiver = find_column(df, "배송지 성명")
+        col_receiver_phone = find_column(df, "배송지 전회번호")
         col_address = find_column(df, "주소")
         col_note = find_column(df, "의견")
 
@@ -69,6 +70,11 @@ if uploaded_file:
         filtered_df["수취인명"] = filtered_df[col_receiver].fillna("").replace("", np.nan)
         filtered_df["수취인명"] = filtered_df["수취인명"].fillna(filtered_df[col_name])
         filtered_df["수취인 전화번호"] = filtered_df[col_phone].apply(normalize_phone)
+
+        # 배송지 연락처 우선, 없으면 주문자 연락처
+        filtered_df["수취인 전화번호"] = filtered_df.apply(
+          lambda row: normalize_phone(row[col_receiver_phone]) if pd.notna(row.get(col_receiver_phone)) and str(row[col_receiver_phone]).strip() != "" 
+          else normalize_phone(row[col_phone]),axis=1)
 
         # 행 반복
         output_rows = []
