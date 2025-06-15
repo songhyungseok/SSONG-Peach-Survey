@@ -28,7 +28,7 @@ if uploaded_file:
         col_name = find_column(df, "입금자명")
         col_phone = find_column(df, "연락처")
         col_receiver = find_column(df, "배송지 성명")
-        col_receiver_phone = find_column(df, "배송지 전회번호")
+        col_receiver_phone = find_column(df, "배송지 전화번호")
         col_address = find_column(df, "주소")
         col_note = find_column(df, "의견")
 
