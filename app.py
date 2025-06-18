@@ -35,6 +35,7 @@ if uploaded_file:
         # "2kg", "4kg" 항목 찾기
         col_2kg = [col for col in df.columns if "2kg" in col][0]
         col_4kg = [col for col in df.columns if "4kg" in col][0]
+        col_1kg = [col for col in df.columns if "1.5kg" in col][0]
 
         df[col_date] = pd.to_datetime(df[col_date], errors='coerce')
 
@@ -51,9 +52,11 @@ if uploaded_file:
 
         filter_2kg = st.checkbox("✅ 2kg 수량 1개 이상", value=True)
         filter_4kg = st.checkbox("✅ 4kg 수량 1개 이상", value=True)
+        filter_1kg = st.checkbox("✅ 1.5kg 수량 1개 이상", value=True)
 
         df[col_2kg] = pd.to_numeric(df[col_2kg], errors='coerce').fillna(0)
         df[col_4kg] = pd.to_numeric(df[col_4kg], errors='coerce').fillna(0)
+        df[col_1kg] = pd.to_numeric(df[col_1kg], errors='coerce').fillna(0)
 
         filtered_df = df[(df[col_date] >= start_dt) & (df[col_date] <= end_dt)]
 
@@ -92,6 +95,15 @@ if uploaded_file:
             for _ in range(int(row[col_4kg])):
                 output_rows.append({
                     "상품명": "복숭아 4kg",
+                    "수취인명": row["수취인명"],
+                    "수취인 우편번호": "",
+                    "수취인 주소": row[col_address],
+                    "수취인 전화번호": row["수취인 전화번호"],
+                })
+          if filter_1kg and row[col_1kg] > 0:
+            for _ in range(int(row[col_4kg])):
+                output_rows.append({
+                    "상품명": "복숭아 1.5kg",
                     "수취인명": row["수취인명"],
                     "수취인 우편번호": "",
                     "수취인 주소": row[col_address],
