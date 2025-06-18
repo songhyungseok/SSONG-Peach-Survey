@@ -101,7 +101,7 @@ if uploaded_file:
                     "수취인 전화번호": row["수취인 전화번호"],
                 })
           if filter_1kg and row[col_1kg] > 0:
-            for _ in range(int(row[col_4kg])):
+            for _ in range(int(row[col_1kg])):
                 output_rows.append({
                     "상품명": "복숭아 1.5kg",
                     "수취인명": row["수취인명"],
