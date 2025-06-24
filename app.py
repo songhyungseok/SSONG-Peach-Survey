@@ -37,11 +37,14 @@ if uploaded_file:
         #col_4kg = [col for col in df.columns if "4kg" in col][0]
         #col_1kg = [col for col in df.columns if "1.5kg" in col][0]
 
-        # 안전하게 2kg, 4kg, 1.5kg 컬럼 찾기
-        col_2kg = next((col for col in df.columns if "2kg" in col), None)
-        col_4kg = next((col for col in df.columns if "4kg" in col), None)
-        col_1kg = next((col for col in df.columns if "1.5kg" in col), None)
+        def find_col_by_keyword(columns, keyword):
+         matches = [col for col in columns if keyword in col]
+        return matches[0] if matches else None
 
+        col_2kg = find_col_by_keyword(df.columns, "2kg")
+        col_4kg = find_col_by_keyword(df.columns, "4kg")
+        col_1kg = find_col_by_keyword(df.columns, "1.5kg")
+        
         df[col_date] = pd.to_datetime(df[col_date], errors='coerce')
 
         # 날짜 필터 UI
@@ -58,7 +61,13 @@ if uploaded_file:
         filter_2kg = st.checkbox("✅ 2kg 수량 1개 이상", value=True)
         filter_4kg = st.checkbox("✅ 4kg 수량 1개 이상", value=True)
         filter_1kg = st.checkbox("✅ 1.5kg 수량 1개 이상", value=True)
-        
+
+        for col in [col_2kg, col_4kg, col_1kg]:
+         if col:
+          df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
+         else:
+          df[col] = 0  # 컬럼이 없어도 오류 안 나게 기본값 0 설정
+
         if col_2kg:
            df[col_2kg] = pd.to_numeric(df[col_2kg], errors='coerce').fillna(0)
         if col_4kg:
