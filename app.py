@@ -39,7 +39,7 @@ if uploaded_file:
 
         def find_col_by_keyword(columns, keyword):
             matches = [col for col in columns if keyword in col]
-             return matches[0] if matches else None
+            return matches[0] if matches else None
 
         col_2kg = find_col_by_keyword(df.columns, "2kg")
         col_4kg = find_col_by_keyword(df.columns, "4kg")
