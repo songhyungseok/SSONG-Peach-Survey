@@ -33,9 +33,14 @@ if uploaded_file:
         col_note = find_column(df, "의견")
 
         # "2kg", "4kg" 항목 찾기
-        col_2kg = [col for col in df.columns if "2kg" in col][0]
-        col_4kg = [col for col in df.columns if "4kg" in col][0]
-        col_1kg = [col for col in df.columns if "1.5kg" in col][0]
+        #col_2kg = [col for col in df.columns if "2kg" in col][0]
+        #col_4kg = [col for col in df.columns if "4kg" in col][0]
+        #col_1kg = [col for col in df.columns if "1.5kg" in col][0]
+
+        # 안전하게 2kg, 4kg, 1.5kg 컬럼 찾기
+        col_2kg = next((col for col in df.columns if "2kg" in col), None)
+        col_4kg = next((col for col in df.columns if "4kg" in col), None)
+        col_1kg = next((col for col in df.columns if "1.5kg" in col), None)
 
         df[col_date] = pd.to_datetime(df[col_date], errors='coerce')
 
@@ -53,7 +58,14 @@ if uploaded_file:
         filter_2kg = st.checkbox("✅ 2kg 수량 1개 이상", value=True)
         filter_4kg = st.checkbox("✅ 4kg 수량 1개 이상", value=True)
         filter_1kg = st.checkbox("✅ 1.5kg 수량 1개 이상", value=True)
-
+        
+        if col_2kg:
+           df[col_2kg] = pd.to_numeric(df[col_2kg], errors='coerce').fillna(0)
+        if col_4kg:
+           df[col_4kg] = pd.to_numeric(df[col_4kg], errors='coerce').fillna(0)
+        if col_1kg:
+           df[col_1kg] = pd.to_numeric(df[col_1kg], errors='coerce').fillna(0)
+    
         df[col_2kg] = pd.to_numeric(df[col_2kg], errors='coerce').fillna(0)
         df[col_4kg] = pd.to_numeric(df[col_4kg], errors='coerce').fillna(0)
         df[col_1kg] = pd.to_numeric(df[col_1kg], errors='coerce').fillna(0)
@@ -82,7 +94,7 @@ if uploaded_file:
         # 행 반복
         output_rows = []
         for _, row in filtered_df.iterrows():
-          if filter_2kg and row[col_2kg] > 0:
+          if col_2kg and filter_2kg and row[col_2kg] > 0:
             for _ in range(int(row[col_2kg])):
                 output_rows.append({
                     "상품명": "복숭아 2kg",
@@ -91,7 +103,7 @@ if uploaded_file:
                     "수취인 주소": row[col_address],
                     "수취인 전화번호": row["수취인 전화번호"],
                 })
-          if filter_4kg and row[col_4kg] > 0:
+          if col_4kg and filter_4kg and row[col_4kg] > 0:
             for _ in range(int(row[col_4kg])):
                 output_rows.append({
                     "상품명": "복숭아 4kg",
@@ -100,7 +112,7 @@ if uploaded_file:
                     "수취인 주소": row[col_address],
                     "수취인 전화번호": row["수취인 전화번호"],
                 })
-          if filter_1kg and row[col_1kg] > 0:
+          if col_1kg and filter_1kg and row[col_1kg] > 0:
             for _ in range(int(row[col_1kg])):
                 output_rows.append({
                     "상품명": "복숭아 1.5kg",
