@@ -34,6 +34,7 @@ if uploaded_file:
 
         # "2kg", "4kg" 항목 찾기
         #col_2kg = [col for col in df.columns if "2kg" in col][0]
+        #col_3kg = [col for col in df.columns if "3kg" in col][0]
         #col_4kg = [col for col in df.columns if "4kg" in col][0]
         #col_1kg = [col for col in df.columns if "1.5kg" in col][0]
 
@@ -42,6 +43,7 @@ if uploaded_file:
             return matches[0] if matches else None
 
         col_2kg = find_col_by_keyword(df.columns, "2kg")
+        col_3kg = find_col_by_keyword(df.columns, "3kg") 
         col_4kg = find_col_by_keyword(df.columns, "4kg")
         col_1kg = find_col_by_keyword(df.columns, "1.5kg")
         
@@ -59,10 +61,11 @@ if uploaded_file:
         end_dt = pd.to_datetime(f"{end_date} {end_time}")
 
         filter_2kg = st.checkbox("✅ 2kg 수량 1개 이상", value=True)
+        filter_3kg = st.checkbox("✅ 3kg 수량 1개 이상", value=True)
         filter_4kg = st.checkbox("✅ 4kg 수량 1개 이상", value=True)
         filter_1kg = st.checkbox("✅ 1.5kg 수량 1개 이상", value=True)
 
-        for col in [col_2kg, col_4kg, col_1kg]:
+        for col in [col_2kg, col_3kg, col_4kg, col_1kg]:
          if col:
           df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
          else:
@@ -70,12 +73,15 @@ if uploaded_file:
 
         if col_2kg:
            df[col_2kg] = pd.to_numeric(df[col_2kg], errors='coerce').fillna(0)
+        if col_3kg:
+           df[col_3kg] = pd.to_numeric(df[col_3kg], errors='coerce').fillna(0)
         if col_4kg:
            df[col_4kg] = pd.to_numeric(df[col_4kg], errors='coerce').fillna(0)
         if col_1kg:
            df[col_1kg] = pd.to_numeric(df[col_1kg], errors='coerce').fillna(0)
     
         df[col_2kg] = pd.to_numeric(df[col_2kg], errors='coerce').fillna(0)
+        df[col_3kg] = pd.to_numeric(df[col_3kg], errors='coerce').fillna(0)
         df[col_4kg] = pd.to_numeric(df[col_4kg], errors='coerce').fillna(0)
         df[col_1kg] = pd.to_numeric(df[col_1kg], errors='coerce').fillna(0)
 
@@ -107,6 +113,15 @@ if uploaded_file:
             for _ in range(int(row[col_2kg])):
                 output_rows.append({
                     "상품명": "복숭아 2kg",
+                    "수취인명": row["수취인명"],
+                    "수취인 우편번호": "",
+                    "수취인 주소": row[col_address],
+                    "수취인 전화번호": row["수취인 전화번호"],
+                })
+          if col_3kg and filter_3kg and row[col_3kg] > 0:
+            for _ in range(int(row[col_3kg])):
+                output_rows.append({
+                    "상품명": "복숭아 3kg",
                     "수취인명": row["수취인명"],
                     "수취인 우편번호": "",
                     "수취인 주소": row[col_address],
