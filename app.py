@@ -157,7 +157,7 @@ if uploaded_file:
             
         st.success(
             f"📦 총 {len(order_df)}건 추출됨 "
-            f"(1.5kg: {col_1kg}개 / 2kg: {col_2kg}개 / 3kg: {col_3kg}개 / 4kg: {col_4kg}개)"
+            f"(1.5kg: {count_1kg}개 / 2kg: {col_2kg}개 / 3kg: {col_3kg}개 / 4kg: {col_4kg}개)"
         )
         st.download_button(
             label="📥 복숭아 주문 엑셀 다운로드",
