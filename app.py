@@ -106,6 +106,12 @@ if uploaded_file:
           lambda row: normalize_phone(row[col_receiver_phone]) if pd.notna(row.get(col_receiver_phone)) and str(row[col_receiver_phone]).strip() != "" 
           else normalize_phone(row[col_phone]),axis=1)
 
+        # 무게별 건수를 저장할 카운터 변수 초기화
+        count_1kg = 0
+        count_2kg = 0
+        count_3kg = 0
+        count_4kg = 0
+        
         # 행 반복
         output_rows = []
         for _, row in filtered_df.iterrows():
@@ -118,6 +124,7 @@ if uploaded_file:
                     "수취인 주소": row[col_address],
                     "수취인 전화번호": row["수취인 전화번호"],
                 })
+                count_2kg += 1  # 2kg 카운트 증가
           if col_3kg and filter_3kg and row[col_3kg] > 0:
             for _ in range(int(row[col_3kg])):
                 output_rows.append({
@@ -127,6 +134,7 @@ if uploaded_file:
                     "수취인 주소": row[col_address],
                     "수취인 전화번호": row["수취인 전화번호"],
                 })
+                count_3kg += 1  # 3kg 카운트 증가
           if col_4kg and filter_4kg and row[col_4kg] > 0:
             for _ in range(int(row[col_4kg])):
                 output_rows.append({
@@ -136,6 +144,7 @@ if uploaded_file:
                     "수취인 주소": row[col_address],
                     "수취인 전화번호": row["수취인 전화번호"],
                 })
+                count_4kg += 1  # 4kg 카운트 증가
           if col_1kg and filter_1kg and row[col_1kg] > 0:
             for _ in range(int(row[col_1kg])):
                 output_rows.append({
@@ -145,6 +154,7 @@ if uploaded_file:
                     "수취인 주소": row[col_address],
                     "수취인 전화번호": row["수취인 전화번호"],
                 })
+                count_1kg += 1  # 1kg 카운트 증가
 
         order_df = pd.DataFrame(output_rows)
 
@@ -157,7 +167,7 @@ if uploaded_file:
             
         st.success(
             f"📦 총 {len(order_df)}건 추출됨 "
-            f"(1.5kg: {count_1kg}개 / 2kg: {col_2kg}개 / 3kg: {col_3kg}개 / 4kg: {col_4kg}개)"
+            f"(1.5kg: {count_1kg}개 / 2kg: {count_2kg}개 / 3kg: {count_3kg}개 / 4kg: {count_4kg}개)"
         )
         st.download_button(
             label="📥 복숭아 주문 엑셀 다운로드",
