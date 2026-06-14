@@ -154,8 +154,11 @@ if uploaded_file:
                 for sheet, df in df_dict.items():
                     df.to_excel(writer, index=False, sheet_name=sheet)
             return output.getvalue()
-
-        st.success(f"📦 총 {len(order_df)}건 추출됨")
+            
+        st.success(
+            f"📦 총 {len(order_df)}건 추출됨 "
+            f"(1.5kg: {count_1_5kg}개 / 2kg: {count_2kg}개 / 3kg: {count_3kg}개 / 4kg: {count_4kg}개)"
+        )
         st.download_button(
             label="📥 복숭아 주문 엑셀 다운로드",
             data=to_excel_bytes({"주문서": order_df}),
